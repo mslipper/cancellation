@@ -1,4 +1,4 @@
-module cancellation
+module github.com/mslipper/cancellation
 
 go 1.12
 

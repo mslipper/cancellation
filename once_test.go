@@ -10,16 +10,20 @@ import (
 
 func TestOnce(t *testing.T) {
 	once := NewOnce()
-	doneCh := make(chan struct{})
-	go func() {
-		for i := 0; i < rand.Intn(100); i++ {
+	calls := rand.Intn(100)
+	doneCh := make(chan struct{}, calls)
+
+	for i := 0; i < calls; i++ {
+		go func(i int) {
 			once.Cancel(errors.New(fmt.Sprintf("err%d", i)))
 			doneCh <- struct{}{}
-		}
-	}()
+		}(i)
+	}
 
 	err := once.Wait()
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "err0")
-	<-doneCh
+	assert.Contains(t, err.Error(), "err")
+	for i := 0; i < cap(doneCh); i++ {
+		<-doneCh
+	}
 }
